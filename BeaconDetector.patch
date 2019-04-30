@@ -1,0 +1,148 @@
+Index: android/BeaconDetector/app/src/main/java/br/com/petrobras/beacondetector/MainActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- android/BeaconDetector/app/src/main/java/br/com/petrobras/beacondetector/MainActivity.java	(revision ad7797820b8b640662bf6eb81c3cc0e3c8c19cfe)
++++ android/BeaconDetector/app/src/main/java/br/com/petrobras/beacondetector/MainActivity.java	(revision 4727f24711e81b3d0fada67ecbe09252d040a868)
+@@ -16,7 +16,6 @@
+ import android.support.v7.widget.RecyclerView;
+ import android.util.Log;
+ import android.util.Patterns;
+-import android.widget.TextView;
+ 
+ import org.altbeacon.beacon.Beacon;
+ import org.altbeacon.beacon.BeaconConsumer;
+@@ -43,14 +42,10 @@
+     private static final int REQUEST_READ_PHONE_STATE = 4;
+ 
+     protected Region mRegion;
+-    public static final int TYPE_EDDYSTONE_TLM = 32;
++    //public static final int TYPE_EDDYSTONE_TLM = 32;
+     public static final int TYPE_EDDYSTONE_UID = 0;
+-    public static final int TYPE_EDDYSTONE_URL = 16;
+-    public static final int TYPE_IBEACON_ALTBEACON = 1;
+-
+-
+-    private RecyclerView devices;
+-    private TextView emptyView;
++    //public static final int TYPE_EDDYSTONE_URL = 16;
++    //public static final int TYPE_IBEACON_ALTBEACON = 1;
+ 
+     Map<String, DetectedBeacon> detectedNearBeacons;
+     private DetectedBeaconAdapter mBeaconsAdapter;
+@@ -84,10 +79,10 @@
+         beaconManager.bind(this);
+ 
+ 
+-        emptyView =  findViewById(R.id.emptyView);
++        //TextView emptyView =  findViewById(R.id.emptyView);
+ 
+         //Recycle View
+-        devices = findViewById(R.id.devices);
++        RecyclerView devices = findViewById(R.id.devices);
+         devices.setLayoutManager(new LinearLayoutManager(this));
+         devices.setHasFixedSize(true);
+         mBeaconsAdapter = new DetectedBeaconAdapter(this);
+@@ -112,11 +107,12 @@
+ 
+     @Override
+     public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
++
+         Log.i(TAG, "Exec didRangeBeaconsInRegion - beacons == null? "+(beacons == null));
+         if (beacons != null) {
+             Log.i(TAG, "Exec didRangeBeaconsInRegion - beacons.size() > 0? "+(beacons.size() > 0));
+             if (beacons.size() > 0) {
+-                notifyBeaconDiscovery(beacons, region);
++                notifyBeaconDiscovery( beacons);
+                 StringBuilder beaconInfo = new StringBuilder();
+                 for ( Beacon beacon: beacons){
+                     beaconInfo.append("BluetoothName: ").append(beacon.getBluetoothName()).append("\n")
+@@ -134,17 +130,20 @@
+ 
+     @Override
+     public void onBeaconServiceConnect() {
++
+         mRegion = new Region("all-beacons-region", null, null, null);
++        beaconManager.addRangeNotifier(this);
+         try {
+             beaconManager.startRangingBeaconsInRegion(mRegion);
++            beaconManager.startMonitoringBeaconsInRegion( mRegion);
+         } catch (RemoteException e) {
+             e.printStackTrace();
+         }
+-        beaconManager.addRangeNotifier(this);
+     }
+ 
+     @Override
+-    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], int[] grantResults) {
++    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
++                                           @NonNull int[] grantResults) {
+         switch (requestCode) {
+             case PERMISSION_REQUEST_COARSE_LOCATION: {
+                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+@@ -215,7 +214,6 @@
+                     });
+                     permFailedDialog.show();
+                 }
+-                return;
+             }
+         }
+     }
+@@ -336,27 +334,22 @@
+     }
+ 
+ 
+-    private synchronized void notifyBeaconDiscovery(final Collection<Beacon> beacons, final org.altbeacon.beacon.Region region){
++    private synchronized void notifyBeaconDiscovery(final Collection<Beacon> beacons) {
+         this.runOnUiThread(new Runnable() {
+             public void run() {
+-                DetectedBeacon detected = null;
+-                for (Beacon beacon: beacons){
+-                    detected = new DetectedBeacon(beacon);
+-                    //tracked = mDataManager.getBeacon(detected.getId());
+-                    DetectedBeacon currentDetected  = detectedNearBeacons.get(detected.getMajor());
+-                    if (null == currentDetected  || null == currentDetected.getId() || currentDetected.getId().isEmpty()){
+-                        detectedNearBeacons.put(detected.getMajor(), detected);
+-                    }
+-                    mBeaconsAdapter.insertBeacons(detectedNearBeacons.values());
++
++                for( Beacon beacon: beacons) {
++
++                    DetectedBeacon detected = new DetectedBeacon( beacon);
++//                    DetectedBeacon currentDetected  = detectedNearBeacons.get( detected.getMajor());
++//                    if( currentDetected == null || currentDetected.getId() == null ||
++//                            currentDetected.getId().isEmpty()) {
++
++                        detectedNearBeacons.put( detected.getMajor(), detected);
++//                    }
++                    mBeaconsAdapter.insertBeacons( detectedNearBeacons.values());
+                 }
+-
+             }
+         });
+     }
+-}
+-
+-
+-
+-
+-
+-
++}
+\ No newline at end of file
+Index: android/BeaconDetector/app/src/main/java/br/com/petrobras/beacondetector/model/DetectedBeacon.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- android/BeaconDetector/app/src/main/java/br/com/petrobras/beacondetector/model/DetectedBeacon.java	(revision ad7797820b8b640662bf6eb81c3cc0e3c8c19cfe)
++++ android/BeaconDetector/app/src/main/java/br/com/petrobras/beacondetector/model/DetectedBeacon.java	(revision 4727f24711e81b3d0fada67ecbe09252d040a868)
+@@ -98,6 +98,7 @@
+         return BeaconType.IBEACON;
+     }
+ 
++    @Override
+     public Identifier getId2() {
+         if (isEddyStoneURL()) {
+             return Identifier.parse("");
